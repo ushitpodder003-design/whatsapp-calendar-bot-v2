@@ -41,11 +41,11 @@ const createEvent = async (authClient, title, startTime, duration = 60) => {
             summary: title,
             start: {
                 dateTime: new Date(startTime).toISOString(),
-                timeZone: 'UTC'
+                timeZone: 'Asia/Kolkata' // Set timezone to India (IST)
             },
             end: {
                 dateTime: endTime.toISOString(),
-                timeZone: 'UTC'
+                timeZone: 'Asia/Kolkata' // Set timezone to India (IST)
             }
         };
 
