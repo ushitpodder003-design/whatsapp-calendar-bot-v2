@@ -2,9 +2,11 @@ const { google } = require('googleapis');
 
 const calendar = google.calendar('v3');
 
-// Parse relative time phrases into Date objects
+// Parse relative time phrases into Date objects for IST timezone
 const parseTimePhrase = (phrase) => {
     console.log('🕐 Parsing time phrase:', phrase);
+    
+    // Create dates in IST by working with UTC and adjusting for IST offset (UTC+5:30)
     const now = new Date();
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -24,15 +26,24 @@ const parseTimePhrase = (phrase) => {
     if (period === 'pm' && hour !== 12) finalHour = hour + 12;
     if (period === 'am' && hour === 12) finalHour = 0;
     
-    let targetDate = phrase.toLowerCase().includes('today') ? now : tomorrow;
+    // Determine target date
+    let targetDate = phrase.toLowerCase().includes('today') ? new Date(now) : new Date(tomorrow);
     if (phrase.toLowerCase().includes('next')) {
         targetDate = new Date(tomorrow);
         targetDate.setDate(targetDate.getDate() + 6);
     }
     
+    // Set the time - this creates a "wall clock" time that we'll treat as IST
     targetDate.setHours(finalHour, minute, 0, 0);
-    console.log(`✅ Calculated time: ${targetDate.toLocaleString('en-IN')}`);
-    return targetDate;
+    
+    // Convert to UTC by subtracting IST offset (UTC+5:30)
+    // This ensures when Google Calendar sees this as IST, it shows the correct time
+    const istOffset = 5 * 60 + 30; // IST is UTC+5:30 in minutes
+    const utcTime = new Date(targetDate.getTime() - istOffset * 60000);
+    
+    console.log(`✅ Wall clock time (IST): ${targetDate.toLocaleString('en-IN')}`);
+    console.log(`✅ UTC time sent to Calendar: ${utcTime.toISOString()}`);
+    return utcTime;
 };
 
 const createEvent = async (authClient, title, startTime, duration = 60) => {
