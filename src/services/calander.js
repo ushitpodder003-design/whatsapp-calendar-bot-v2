@@ -4,10 +4,12 @@ const calendar = google.calendar('v3');
 
 // Parse relative time phrases into Date objects
 const parseTimePhrase = (phrase) => {
+    console.log('🕐 Parsing time phrase:', phrase);
     const now = new Date();
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
     
+    // Improved regex to handle various formats: "10am", "10 am", "10:30am", "10:30 am"
     const timeRegex = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i;
     const match = timeRegex.exec(phrase);
     
@@ -15,8 +17,12 @@ const parseTimePhrase = (phrase) => {
     const minute = match ? (match[2] ? parseInt(match[2]) : 0) : 0;
     const period = match ? (match[3] ? match[3].toLowerCase() : '') : '';
     
-    if (period === 'pm' && hour !== 12) hour += 12;
-    if (period === 'am' && hour === 12) hour = 0;
+    console.log(`⏰ Extracted: hour=${match ? match[1] : 'none'}, minute=${match ? match[2] || 0 : 'none'}, period=${period}`);
+    
+    // Convert 12-hour to 24-hour format
+    let finalHour = hour;
+    if (period === 'pm' && hour !== 12) finalHour = hour + 12;
+    if (period === 'am' && hour === 12) finalHour = 0;
     
     let targetDate = phrase.toLowerCase().includes('today') ? now : tomorrow;
     if (phrase.toLowerCase().includes('next')) {
@@ -24,7 +30,8 @@ const parseTimePhrase = (phrase) => {
         targetDate.setDate(targetDate.getDate() + 6);
     }
     
-    targetDate.setHours(hour, minute, 0, 0);
+    targetDate.setHours(finalHour, minute, 0, 0);
+    console.log(`✅ Calculated time: ${targetDate.toLocaleString('en-IN')}`);
     return targetDate;
 };
 
