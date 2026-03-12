@@ -50,10 +50,18 @@ const webhookHandler = async (req, res) => {
                 // Send response immediately, then send message in background
                 console.log('📤 Sending HTTP response (unauthenticated)');
                 res.status(200).json({ success: true });
-                console.log('📤 Response sent!');
-                sendWhatsAppMessage(senderPhone, authMessage).catch(msgError => {
-                    console.error('⚠️ Error sending WhatsApp message:', msgError.message);
-                });
+                console.log('📤 HTTP Response sent!');
+                
+                // Send auth message with better error handling
+                console.log('💬 Attempting to send auth WhatsApp message...');
+                sendWhatsAppMessage(senderPhone, authMessage)
+                    .then(result => {
+                        console.log('✅ Auth message sent successfully!');
+                    })
+                    .catch(msgError => {
+                        console.error('❌ CRITICAL: Error sending auth message:', msgError.message);
+                        console.error('❌ Full error:', msgError);
+                    });
                 return;
             }
 
@@ -134,19 +142,35 @@ const webhookHandler = async (req, res) => {
                 console.log('📤 Sending HTTP response (authenticated)');
                 // Send response immediately, then send message in background
                 res.status(200).json({ success: true });
-                console.log('📤 Response sent!');
-                sendWhatsAppMessage(senderPhone, replyMessage).catch(msgError => {
-                    console.error('⚠️ Error sending WhatsApp message:', msgError.message);
-                });
+                console.log('📤 HTTP Response sent!');
+                
+                // Send WhatsApp message with better error handling
+                console.log('💬 Attempting to send WhatsApp reply...');
+                sendWhatsAppMessage(senderPhone, replyMessage)
+                    .then(result => {
+                        console.log('✅ WhatsApp message sent successfully!');
+                    })
+                    .catch(msgError => {
+                        console.error('❌ CRITICAL: Error sending WhatsApp message:', msgError.message);
+                        console.error('❌ Full error:', msgError);
+                    });
 
             } catch (error) {
                 console.error('❌ Error processing intent:', error.message);
                 console.log('📤 Sending error response');
                 res.status(200).json({ success: false });
                 console.log('📤 Error response sent!');
-                sendWhatsAppMessage(senderPhone, '❌ Error processing your request. Please try again.').catch(msgError => {
-                    console.error('⚠️ Error sending error message:', msgError.message);
-                });
+                
+                // Send error message with better error handling
+                console.log('💬 Attempting to send error WhatsApp message...');
+                sendWhatsAppMessage(senderPhone, '❌ Error processing your request. Please try again.')
+                    .then(result => {
+                        console.log('✅ Error message sent successfully!');
+                    })
+                    .catch(msgError => {
+                        console.error('❌ CRITICAL: Error sending error message:', msgError.message);
+                        console.error('❌ Full error:', msgError);
+                    });
             }
         } catch (dbError) {
             console.error('❌ Database error:', dbError.message);
