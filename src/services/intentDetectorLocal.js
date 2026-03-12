@@ -31,12 +31,22 @@ const detectIntentLocal = (message) => {
     if (msg.includes('schedule') || msg.includes('create') || msg.includes('add') || 
         msg.includes('meeting') || msg.includes('event') || msg.includes('call') || 
         msg.includes('book') || msg.includes('remind') || msg.includes('conference')) {
-        // Extract time phrases
-        const timeRegex = /(?:tomorrow|today|next|at|on)\s+(?:\d{1,2}(?:am|pm)?|morning|afternoon|evening)/i;
-        const titleRegex = /(?:schedule|create|add|book|call|remind)\s+(?:a\s+|an\s+)?(.+?)(?:\s+(?:at|on|tomorrow|today|next)|$)/i;
+        // Extract time phrases - more comprehensive pattern
+        const timeRegex = /(?:tomorrow|today|next|at|on)\s+(?:\d{1,2}(?::\d{2})?(?:am|pm)?|morning|afternoon|evening)/i;
         
-        let title = titleRegex.exec(msg)?.[1] || 'Event';
-        title = title.charAt(0).toUpperCase() + title.slice(1); // Capitalize first letter
+        // Try to extract title - first check if it starts with schedule/create/add keywords
+        let titleRegex = /(?:schedule|create|add|book|call|remind)\s+(?:a\s+|an\s+)?(.+?)(?:\s+(?:at|on|tomorrow|today|next)|$)/i;
+        let title = titleRegex.exec(msg)?.[1];
+        
+        // If no match, try to extract everything before time keywords
+        if (!title) {
+            titleRegex = /^(.+?)(?:\s+(?:at|on|tomorrow|today|next|in|for))/i;
+            title = titleRegex.exec(msg)?.[1];
+        }
+        
+        // Default to 'Event' if still no title
+        title = title || 'Event';
+        title = title.trim().charAt(0).toUpperCase() + title.trim().slice(1); // Capitalize and trim
         
         return {
             intent: 'CREATE',
